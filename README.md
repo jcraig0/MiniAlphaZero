@@ -1,4 +1,4 @@
-# SimpleAlphaZero
+# MiniAlphaZero
 
 This Python program plays 4x4 tic-tac-toe with a convolutional neural network and Monte Carlo tree search. It uses relatively few lines of code to make it easier to understand. More board games may be added to the project in the future.
 
