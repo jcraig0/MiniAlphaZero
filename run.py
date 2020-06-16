@@ -36,8 +36,10 @@ def play(self_play, human_test):
                 curr_model = model if self_play or board.turn else backup
                 root = mcts.simulate(curr_model, board)
                 if self_play:
-                    curr_positions.append([board.copy(), root.children])
+                    curr_positions.append(
+                        [copy.deepcopy(board), root.children])
 
+                # Moves with the most visits are prioritized
                 next_move = random.choices(
                     root.children, weights=list(map(
                         lambda child: child.visits, root.children)))[0].move
@@ -45,8 +47,8 @@ def play(self_play, human_test):
 
         if human_test:
             print(board)
-        winner = {'1-0': 1, '0-1': 0, '1/2-1/2': .5}[board.result()]
-        print('Result of game is {}.'.format(board.result()))
+        winner = {'1-0': 1, '0-1': 0, '1/2-1/2': .5}[board.winner]
+        print('Result of game is {}.'.format(board.winner))
         if self_play:
             for pos in curr_positions:
                 pos.append(winner if pos[0].turn else 1 - winner)
@@ -59,6 +61,7 @@ def play(self_play, human_test):
 
 def solve():
     board = tic_tac_toe.TicTacToeBoard()
+    # May be modified to evaluate a different position
     sequence = [(2, 1), (1, 1), (1, 2), (3, 3), (1, 3), (0, 0)]
     for move in sequence:
         board.push(move)
@@ -89,7 +92,7 @@ def train():
     backup = copy.deepcopy(model)
     model.train()
 
-    positions = positions[-config.NUM_POSITIONS:]
+    positions = positions[-config.NUM_POSITIONS:]   # Discard older positions
     random.shuffle(positions)
 
     optimizer = torch.optim.Adam(model.parameters())
@@ -118,7 +121,7 @@ def train():
 
         avg_loss = round(
             epoch_loss.item() / -(-len(positions) // config.BATCH_SIZE), 4)
-        print('Average loss for epoch #{}: {}.'.format(i + 1, avg_loss))
+        print('Avg. batch loss for epoch #{}: {}.'.format(i + 1, avg_loss))
 
 
 def evaluate(iter):
@@ -140,6 +143,8 @@ def evaluate(iter):
 
 
 def final_test():
+    # Run to confirm that the model has truly learned the game
+
     print('Starting final evaluation...')
     global backup
     backup = original
@@ -149,6 +154,7 @@ def final_test():
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    # Both arguments are required if one is entered
     parser.add_argument('--action', action='store')
     parser.add_argument('--model', action='store')
     args = parser.parse_args()

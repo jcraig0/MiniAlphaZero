@@ -1,6 +1,7 @@
 import torch
 import config
 import math
+import copy
 
 
 class Node:
@@ -25,6 +26,7 @@ def board_to_tensor(board):
 def ucb(curr_node, child):
     prob = curr_node.probs[child.move[0] * 4 + child.move[1]]
     if child.visits:
+        # "-1 + 2 *" projects the range [0, 1] to [-1, 1]
         return -1 + 2 * child.wins / child.visits + prob \
             * math.sqrt(curr_node.visits) / (child.visits + 1)
     else:
@@ -36,14 +38,16 @@ def simulate(model, board):
     root = Node()
 
     for i in range(config.MCTS_SIMS):
-        board_copy = board.copy()
+        board_copy = copy.deepcopy(board)
         curr_node = root
 
+        # Selection phase
         while curr_node.children:
             curr_node = max(curr_node.children, key=lambda child:
                             ucb(curr_node, child))
             board_copy.push(curr_node.move)
 
+        # Expansion phase
         if not board_copy.is_game_over():
             with torch.no_grad():
                 policy, value = model(board_to_tensor(board_copy))
@@ -60,9 +64,12 @@ def simulate(model, board):
 
             value = value.item()
         else:
-            value = .5 if board_copy.result() == '1/2-1/2' else 0
+            # To be inverted to the correct value in backpropagation
+            value = .5 if board_copy.winner == '1/2-1/2' else 0
 
+        # Backpropagation phase
         while curr_node is not None:
+            # Value is inverted to pertain to previous player
             value = 1 - value
             curr_node.wins += value
             curr_node.visits += 1

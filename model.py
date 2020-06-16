@@ -5,6 +5,7 @@ class TicTacToeCNN(nn.Module):
     def __init__(self):
         super(TicTacToeCNN, self).__init__()
 
+        # The padding cancels out the kernel size shrinking the output
         self.conv1 = nn.Conv2d(1, 256, 3, padding=1)
         self.conv2 = nn.Conv2d(256, 256, 3, padding=1)
         self.conv3 = nn.Conv2d(256, 256, 3, padding=1)
@@ -17,8 +18,8 @@ class TicTacToeCNN(nn.Module):
 
         self.drop = nn.Dropout()
         self.relu = nn.ReLU()
-        self.sigm = nn.Sigmoid()
         self.soft = nn.Softmax(dim=1)
+        self.sigm = nn.Sigmoid()
 
     def forward(self, input):
         x = self.conv1(input)
