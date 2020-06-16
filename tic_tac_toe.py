@@ -1,0 +1,48 @@
+import copy
+
+
+class TicTacToeBoard():
+    def __init__(self):
+        self.grid = [[' '] * 4, [' '] * 4, [' '] * 4, [' '] * 4]
+        self.fullmove_number = 1
+        self.turn = True
+        self.winner = ''
+        self.legal_moves = [(i, j) for j in range(4) for i in range(4)]
+
+    def is_game_over(self):
+        for row in self.grid:
+            if all([j == 'X' for j in row]) or all([j == 'O' for j in row]):
+                self.winner = '0-1' if self.turn else '1-0'
+                return True
+        for row in zip(*self.grid):
+            if all([j == 'X' for j in row]) or all([j == 'O' for j in row]):
+                self.winner = '0-1' if self.turn else '1-0'
+                return True
+        if (all([self.grid[i][i] == 'X' for i in range(4)])
+           or all([self.grid[i][i] == 'O' for i in range(4)])
+           or all([self.grid[i][3 - i] == 'X' for i in range(4)])
+           or all([self.grid[i][3 - i] == 'O' for i in range(4)])):
+            self.winner = '0-1' if self.turn else '1-0'
+            return True
+        if all([self.grid[i][j] != ' ' for i in range(4) for j in range(4)]):
+            self.winner = '1/2-1/2'
+            return True
+
+    def result(self):
+        return self.winner
+
+    def push(self, move):
+        self.grid[move[0]][move[1]] = 'X' if self.turn else 'O'
+        self.legal_moves.remove(move)
+
+        self.turn = False if self.turn else True
+        if not self.turn:
+            self.fullmove_number += 1
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def __str__(self):
+        return '\n' + '\n'.join(
+            [' '.join(['_' if i == ' ' else i for i in row])
+             for row in self.grid]) + '\n'
