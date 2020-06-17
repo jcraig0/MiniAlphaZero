@@ -9,7 +9,7 @@ import copy
 import argparse
 
 
-model = model.TicTacToeCNN().cuda()
+model = model.CNN('tic-tac-toe').cuda()
 original = copy.deepcopy(model)
 backup = None
 positions = []
@@ -49,7 +49,7 @@ def play(self_play, human_test):
             else:
                 print(board)
                 move = input().split()
-                board.push((int(move[0]), int(move[1])))
+                board.push(int(move[0]) * 4 + int(move[1]))
 
         if human_test:
             print(board)
@@ -70,9 +70,9 @@ def play(self_play, human_test):
 def solve():
     board = tic_tac_toe.TicTacToeBoard()
     # May be modified to evaluate a different position
-    sequence = [(2, 1), (1, 1), (1, 2), (3, 3), (1, 3), (0, 0)]
+    sequence = ((2, 1), (1, 1), (1, 2), (3, 3), (1, 3), (0, 0))
     for move in sequence:
-        board.push(move)
+        board.push(move[0] * 4 + move[1])
     print('\n' + str(board) + '\n')
 
     for i in range(10):
@@ -81,7 +81,8 @@ def solve():
             root.children, weights=list(map(
                 lambda child: child.visits, root.children)))[0].move
         print('Predicted next move for {}: {}.'.format(
-            'X' if board.turn else 'O', next_move))
+            'X' if board.turn else 'O',
+            '({}, {})'.format(next_move // 4, next_move % 4)))
 
 
 def get_y_policies(batch):
@@ -89,8 +90,7 @@ def get_y_policies(batch):
     for i, pos in enumerate(batch):
         visits_sum = sum(map(lambda child: child.visits, pos[1]))
         for j, child in enumerate(pos[1]):
-            Y_policies[i, child.move[0] * 4 + child.move[1]] = \
-                child.visits / visits_sum
+            Y_policies[i, child.move] = child.visits / visits_sum
     return Y_policies
 
 

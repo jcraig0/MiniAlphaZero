@@ -24,7 +24,7 @@ def board_to_tensor(board):
 
 
 def ucb(curr_node, child):
-    prob = curr_node.probs[child.move[0] * 4 + child.move[1]]
+    prob = curr_node.probs[child.move]
     if child.visits:
         # "-1 + 2 *" projects the range [0, 1] to [-1, 1]
         return -1 + 2 * child.wins / child.visits + prob \
@@ -58,7 +58,7 @@ def simulate(model, board):
                 new_node.move = move
                 new_node.parent = curr_node
                 curr_node.children.append(new_node)
-                move_nums[move[0] * 4 + move[1]] = 1
+                move_nums[move] = 1
             policy *= move_nums
             curr_node.probs = (policy / torch.sum(policy)).tolist()
 

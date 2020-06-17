@@ -1,9 +1,9 @@
 import torch.nn as nn
 
 
-class TicTacToeCNN(nn.Module):
-    def __init__(self):
-        super(TicTacToeCNN, self).__init__()
+class CNN(nn.Module):
+    def __init__(self, game):
+        super(CNN, self).__init__()
 
         # The padding cancels out the kernel size shrinking the output
         self.conv1 = nn.Conv2d(1, 256, 3, padding=1)
@@ -11,10 +11,16 @@ class TicTacToeCNN(nn.Module):
         self.conv3 = nn.Conv2d(256, 256, 3, padding=1)
         self.conv4 = nn.Conv2d(256, 256, 3, padding=1)
 
-        self.fc1 = nn.Linear(4096, 1024)
-        self.fc2 = nn.Linear(1024, 256)
-        self.fc3 = nn.Linear(256, 16)
-        self.fc4 = nn.Linear(256, 1)
+        if game == 'tic-tac-toe':
+            self.fc1 = nn.Linear(4096, 1024)
+            self.fc2 = nn.Linear(1024, 256)
+            self.fc3 = nn.Linear(256, 16)
+            self.fc4 = nn.Linear(256, 1)
+        else:
+            self.fc1 = nn.Linear(10752, 2688)
+            self.fc2 = nn.Linear(2688, 672)
+            self.fc3 = nn.Linear(672, 7)
+            self.fc4 = nn.Linear(672, 1)
 
         self.drop = nn.Dropout()
         self.relu = nn.ReLU()
@@ -44,7 +50,7 @@ class TicTacToeCNN(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
 
-        # Policy head (vector of 16 floats between 0 and 1)
+        # Policy head (vector of floats between 0 and 1)
         y = self.fc3(x)
         y = self.soft(y).squeeze()
         # Value head (scalar float between 0 and 1)
