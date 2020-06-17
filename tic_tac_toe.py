@@ -1,10 +1,10 @@
 class TicTacToeBoard():
     def __init__(self):
-        self.grid = [[' '] * 4, [' '] * 4, [' '] * 4, [' '] * 4]
-        self.fullmove_number = 1
+        self.grid = [[' '] * 4 for i in range(4)]
         self.turn = True
         self.winner = ''
         self.legal_moves = [i for i in range(16)]
+        self.num_total_moves = 16
 
     def is_game_over(self):
         # Check for a row win
@@ -32,10 +32,7 @@ class TicTacToeBoard():
     def push(self, move):
         self.grid[move // 4][move % 4] = 'X' if self.turn else 'O'
         self.legal_moves.remove(move)
-
         self.turn = False if self.turn else True
-        if not self.turn:
-            self.fullmove_number += 1
 
     def __str__(self):
         return '\n' + '\n'.join(

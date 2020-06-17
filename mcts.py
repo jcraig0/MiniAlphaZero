@@ -15,9 +15,10 @@ class Node:
 
 
 def board_to_tensor(board):
-    tensor = torch.zeros([1, 1, 4, 4], dtype=torch.float).cuda()
-    for i in range(4):
-        for j in range(4):
+    row_num, col_num = len(board.grid), len(board.grid[0])
+    tensor = torch.zeros([1, 1, row_num, col_num], dtype=torch.float).cuda()
+    for i in range(row_num):
+        for j in range(col_num):
             value = {'X': 1, 'O': 0, ' ': .5}[board.grid[i][j]]
             tensor[0, 0, i, j] = value if board.turn else 1 - value
     return tensor
@@ -52,7 +53,7 @@ def simulate(model, board):
             with torch.no_grad():
                 policy, value = model(board_to_tensor(board_copy))
 
-            move_nums = torch.zeros(16).cuda()
+            move_nums = torch.zeros(board.num_total_moves).cuda()
             for move in board_copy.legal_moves:
                 new_node = Node()
                 new_node.move = move

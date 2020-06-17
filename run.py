@@ -3,15 +3,17 @@ import torch.nn as nn
 import model
 import config
 import tic_tac_toe
+import connect_4
 import mcts
 import random
 import copy
 import argparse
 
 
-model = model.CNN('tic-tac-toe').cuda()
-original = copy.deepcopy(model)
+new_model = None
+original = None
 backup = None
+game_type = ''
 positions = []
 
 
@@ -19,21 +21,27 @@ def play(self_play, human_test):
     iters = config.SELF_PLAYS if self_play else config.EVAL_ITERS
     wins = 0
     if human_test:
-        players = (None, model)
+        players = (None, new_model)
     elif self_play:
-        players = (model, model)
+        players = (new_model, new_model)
     else:
-        players = (model, backup)
+        players = (new_model, backup)
 
     for i in range(iters):
-        if not human_test:
+        if human_test:
+            print('Enter a move ' + ('("0 0" is the top-left space).'
+                  if game_type == 'tic-tac-toe'
+                  else '("0" is the leftmost column).'))
+        else:
             print('Starting {} game #{}...'.format(
                 'self-play' if self_play else 'evaluation', i + 1))
-        board = tic_tac_toe.TicTacToeBoard()
+        board = tic_tac_toe.TicTacToeBoard() if game_type == 'tic-tac-toe' \
+            else connect_4.Connect4Board()
         curr_positions = []
+        player_1_first = random.random() > .5 or not human_test
 
         while not board.is_game_over():
-            curr_model = players[not board.turn]
+            curr_model = players[player_1_first ^ board.turn]
 
             if curr_model:
                 root = mcts.simulate(curr_model, board)
@@ -48,8 +56,13 @@ def play(self_play, human_test):
                 board.push(next_move)
             else:
                 print(board)
-                move = input().split()
-                board.push(int(move[0]) * 4 + int(move[1]))
+                move = input()
+                if game_type == 'tic-tac-toe':
+                    move = move.split()
+                    move = int(move[0]) * 4 + int(move[1])
+                else:
+                    move = int(move)
+                board.push(move)
 
         if human_test:
             print(board)
@@ -68,25 +81,29 @@ def play(self_play, human_test):
 
 
 def solve():
-    board = tic_tac_toe.TicTacToeBoard()
+    board = tic_tac_toe.TicTacToeBoard() if game_type == 'tic-tac-toe' \
+        else connect_4.Connect4Board()
     # May be modified to evaluate a different position
-    sequence = ((2, 1), (1, 1), (1, 2), (3, 3), (1, 3), (0, 0))
+    sequence = (0, 3, 0, 3, 0)
     for move in sequence:
-        board.push(move[0] * 4 + move[1])
-    print('\n' + str(board) + '\n')
+        move = move[0] * 4 + move[1] if game_type == 'tic-tac-toe' else move
+        board.push(move)
+    print(board)
 
     for i in range(10):
-        root = mcts.simulate(model, board)
+        root = mcts.simulate(new_model, board)
         next_move = random.choices(
             root.children, weights=list(map(
                 lambda child: child.visits, root.children)))[0].move
         print('Predicted next move for {}: {}.'.format(
             'X' if board.turn else 'O',
-            '({}, {})'.format(next_move // 4, next_move % 4)))
+            '({}, {})'.format(next_move // 4, next_move % 4)
+            if game_type == 'tic-tac-toe' else next_move))
 
 
 def get_y_policies(batch):
-    Y_policies = torch.zeros([len(batch), 16], dtype=torch.float).cuda()
+    Y_policies = torch.zeros([len(batch), batch[0][0].num_total_moves],
+                             dtype=torch.float).cuda()
     for i, pos in enumerate(batch):
         visits_sum = sum(map(lambda child: child.visits, pos[1]))
         for j, child in enumerate(pos[1]):
@@ -97,13 +114,13 @@ def get_y_policies(batch):
 def train():
     print('Training new network...')
     global backup, positions
-    backup = copy.deepcopy(model)
-    model.train()
+    backup = copy.deepcopy(new_model)
+    new_model.train()
 
     positions = positions[-config.NUM_POSITIONS:]   # Discard older positions
     random.shuffle(positions)
 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(new_model.parameters())
     for i in range(config.NUM_EPOCHS):
         epoch_loss = 0
 
@@ -113,7 +130,7 @@ def train():
             board_tensors = torch.stack([mcts.board_to_tensor(pos[0])
                                          .squeeze(0) for pos in batch]).cuda()
 
-            X_policies, X_values = model(board_tensors)
+            X_policies, X_values = new_model(board_tensors)
             Y_policies = get_y_policies(batch)
             Y_values = torch.tensor([pos[2] for pos in batch],
                                     dtype=torch.float).cuda()
@@ -140,13 +157,13 @@ def evaluate(iter):
         print('New network is better!')
     else:
         print('New network is not better. Restoring backup...')
-        model = backup
+        new_model = backup
 
     if iter % 5 == 0:
         file_name = 'model_iter_{}'.format(iter)
         print("Saving best network as '{}'.".format(file_name))
         with open(file_name, 'wb') as f:
-            torch.save(model, f)
+            torch.save(new_model, f)
 
 
 def final_test():
@@ -161,23 +178,29 @@ def final_test():
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--game', action='store', required=True)
     # Both arguments are required if one is entered
     parser.add_argument('--action', action='store')
     parser.add_argument('--model', action='store')
     args = parser.parse_args()
 
     return {
+        'game': args.game,
         'play_against': args.action == 'play_against',
         'to_solve': args.action == 'solve',
         'model_file': args.model
     }
 
 
-def main(play_against, to_solve, model_file):
-    global model
+def main(game, play_against, to_solve, model_file):
+    global new_model, original, game_type
+    new_model = model.CNN(game).cuda()
+    original = copy.deepcopy(new_model)
+    game_type = game
+
     if play_against or to_solve:
         with open(model_file, 'rb') as f:
-            model = torch.load(f)
+            new_model = torch.load(f)
 
         if to_solve:
             solve()
