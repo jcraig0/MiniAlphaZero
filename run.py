@@ -18,6 +18,12 @@ positions = []
 def play(self_play, human_test):
     iters = config.SELF_PLAYS if self_play else config.EVAL_ITERS
     wins = 0
+    if human_test:
+        players = (None, model)
+    elif self_play:
+        players = (model, model)
+    else:
+        players = (model, backup)
 
     for i in range(iters):
         if not human_test:
@@ -27,13 +33,9 @@ def play(self_play, human_test):
         curr_positions = []
 
         while not board.is_game_over():
-            if human_test and board.turn:
-                print(board)
+            curr_model = players[not board.turn]
 
-                move = input().split()
-                board.push((int(move[0]), int(move[1])))
-            else:
-                curr_model = model if self_play or board.turn else backup
+            if curr_model:
                 root = mcts.simulate(curr_model, board)
                 if self_play:
                     curr_positions.append(
@@ -44,6 +46,10 @@ def play(self_play, human_test):
                     root.children, weights=list(map(
                         lambda child: child.visits, root.children)))[0].move
                 board.push(next_move)
+            else:
+                print(board)
+                move = input().split()
+                board.push((int(move[0]), int(move[1])))
 
         if human_test:
             print(board)
@@ -54,6 +60,8 @@ def play(self_play, human_test):
                 pos.append(winner if pos[0].turn else 1 - winner)
             positions.extend(curr_positions)
         else:
+            print('New model has {}.'.format(
+                {1: 'WON', 0: 'LOST', .5: 'DRAWN'}[winner]))
             wins += winner
 
     return wins
@@ -96,7 +104,6 @@ def train():
     random.shuffle(positions)
 
     optimizer = torch.optim.Adam(model.parameters())
-
     for i in range(config.NUM_EPOCHS):
         epoch_loss = 0
 

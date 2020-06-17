@@ -1,6 +1,3 @@
-import copy
-
-
 class TicTacToeBoard():
     def __init__(self):
         self.grid = [[' '] * 4, [' '] * 4, [' '] * 4, [' '] * 4]

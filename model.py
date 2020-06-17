@@ -44,8 +44,10 @@ class TicTacToeCNN(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
 
+        # Policy head (vector of 16 floats between 0 and 1)
         y = self.fc3(x)
         y = self.soft(y).squeeze()
+        # Value head (scalar float between 0 and 1)
         z = self.fc4(x)
         z = self.sigm(z).squeeze()
 
