@@ -149,7 +149,7 @@ def train():
 
 
 def evaluate(iter):
-    global model
+    global new_model
     wins = play(False, False)
     print('Score against previous network: {}/{}.'.format(
         wins, config.EVAL_ITERS))
@@ -167,7 +167,7 @@ def evaluate(iter):
 
 
 def final_test():
-    # Run to confirm that the model has truly learned the game
+    # Run to confirm that the model has truly been learning
 
     print('Starting final evaluation...')
     global backup
