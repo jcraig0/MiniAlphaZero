@@ -10,7 +10,7 @@ The command `python run.py [--game arg1]` trains a new model to play the game `a
 
 If more parameters are specified, they must be of the form `[--action arg2] [--model arg3]`. `arg2` is either `play_against`, which starts a human vs. computer match-up; or `solve`, in which a model evaluates a position given in `run.py`'s `solve()` function. `arg3` is the name of the model file used with `--action`. A high value for "MCTS_SIMS" is recommended for these modes.
 
-A example 3x3 Tic-Tac-Toe model, trained for ten full iterations, can be found [here](https://drive.google.com/file/d/1uycAKQI1sRyhJQumXNbJPnwMLpc3vfzO/view?usp=sharing). Save it inside the project folder to use it.
+A example 3x3 Tic-Tac-Toe model, trained for ten full iterations with the default parameters, can be found [here](https://drive.google.com/file/d/1o4pI6LYnjfd5-yBihiyJAZvJwPQx-y_q/view?usp=sharing). It must be placed inside the project folder.
 
 ## Credits
 
