@@ -1,10 +1,11 @@
 class TicTacToeBoard():
-    def __init__(self):
-        self.grid = [[' '] * 4 for i in range(4)]
+    def __init__(self, size):
+        self.grid = [[' '] * size for i in range(size)]
         self.turn = True
         self.winner = ''
-        self.legal_moves = [i for i in range(16)]
-        self.num_total_moves = 16
+        self.legal_moves = [i for i in range(size * size)]
+        self.num_total_moves = size * size
+        self.size = size
 
     def is_game_over(self):
         # Check for a row win
@@ -18,19 +19,23 @@ class TicTacToeBoard():
                 self.winner = '0-1' if self.turn else '1-0'
                 return True
         # Check for a diagonal win
-        if (all([self.grid[i][i] == 'X' for i in range(4)])
-           or all([self.grid[i][i] == 'O' for i in range(4)])
-           or all([self.grid[i][3 - i] == 'X' for i in range(4)])
-           or all([self.grid[i][3 - i] == 'O' for i in range(4)])):
+        if (all([self.grid[i][i] == 'X' for i in range(self.size)])
+           or all([self.grid[i][i] == 'O' for i in range(self.size)])
+           or all([self.grid[i][self.size - 1 - i] == 'X'
+                   for i in range(self.size)])
+           or all([self.grid[i][self.size - 1 - i] == 'O'
+                   for i in range(self.size)])):
             self.winner = '0-1' if self.turn else '1-0'
             return True
         # Check if the board is full
-        if all([self.grid[i][j] != ' ' for i in range(4) for j in range(4)]):
+        if all([self.grid[i][j] != ' '
+                for i in range(self.size) for j in range(self.size)]):
             self.winner = '1/2-1/2'
             return True
 
     def push(self, move):
-        self.grid[move // 4][move % 4] = 'X' if self.turn else 'O'
+        self.grid[move // self.size][move % self.size] = \
+            'X' if self.turn else 'O'
         self.legal_moves.remove(move)
         self.turn = False if self.turn else True
 

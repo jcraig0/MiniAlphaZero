@@ -30,13 +30,13 @@ def play(self_play, human_test):
     for i in range(iters):
         if human_test:
             print('Enter a move ' + ('("0 0" is the top-left space).'
-                  if game_type == 'tic-tac-toe'
+                  if game_type.startswith('tic')
                   else '("0" is the leftmost column).'))
         else:
             print('Starting {} game #{}...'.format(
                 'self-play' if self_play else 'evaluation', i + 1))
-        board = tic_tac_toe.TicTacToeBoard() if game_type == 'tic-tac-toe' \
-            else connect_4.Connect4Board()
+        board = tic_tac_toe.TicTacToeBoard(int(game_type[-1])) \
+            if game_type.startswith('tic') else connect_4.Connect4Board()
         curr_positions = []
         player_1_first = random.random() > .5 or not human_test
 
@@ -57,9 +57,9 @@ def play(self_play, human_test):
             else:
                 print(board)
                 move = input()
-                if game_type == 'tic-tac-toe':
+                if game_type.startswith('tic'):
                     move = move.split()
-                    move = int(move[0]) * 4 + int(move[1])
+                    move = int(move[0]) * board.size + int(move[1])
                 else:
                     move = int(move)
                 board.push(move)
@@ -81,12 +81,13 @@ def play(self_play, human_test):
 
 
 def solve():
-    board = tic_tac_toe.TicTacToeBoard() if game_type == 'tic-tac-toe' \
-        else connect_4.Connect4Board()
+    board = tic_tac_toe.TicTacToeBoard(int(game_type[-1])) \
+        if game_type.startswith('tic') else connect_4.Connect4Board()
     # May be modified to evaluate a different position
-    sequence = (0, 3, 0, 3, 0)
+    sequence = ((0, 0), (1, 1), (0, 1))
     for move in sequence:
-        move = move[0] * 4 + move[1] if game_type == 'tic-tac-toe' else move
+        move = move[0] * board.size + move[1] \
+            if game_type.startswith('tic') else move
         board.push(move)
     print(board)
 
@@ -97,8 +98,8 @@ def solve():
                 lambda child: child.visits, root.children)))[0].move
         print('Predicted next move for {}: {}.'.format(
             'X' if board.turn else 'O',
-            '({}, {})'.format(next_move // 4, next_move % 4)
-            if game_type == 'tic-tac-toe' else next_move))
+            '({}, {})'.format(next_move // board.size, next_move % board.size)
+            if game_type.startswith('tic') else next_move))
 
 
 def get_y_policies(batch):
@@ -120,7 +121,8 @@ def train():
     positions = positions[-config.NUM_POSITIONS:]   # Discard older positions
     random.shuffle(positions)
 
-    optimizer = torch.optim.Adam(new_model.parameters())
+    optimizer = torch.optim.Adam(new_model.parameters(),
+                                 lr=config.LEARNING_RATE)
     for i in range(config.NUM_EPOCHS):
         epoch_loss = 0
 
@@ -161,7 +163,7 @@ def evaluate(iter):
 
     if iter % 5 == 0:
         file_name = 'model_iter_{}'.format(iter)
-        print("Saving best network as '{}'.".format(file_name))
+        print('Saving best network as "{}".'.format(file_name))
         with open(file_name, 'wb') as f:
             torch.save(new_model, f)
 

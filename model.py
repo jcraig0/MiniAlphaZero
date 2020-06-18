@@ -11,16 +11,17 @@ class CNN(nn.Module):
         self.conv3 = nn.Conv2d(256, 256, 3, padding=1)
         self.conv4 = nn.Conv2d(256, 256, 3, padding=1)
 
-        if game == 'tic-tac-toe':
-            self.fc1 = nn.Linear(4096, 1024)
-            self.fc2 = nn.Linear(1024, 256)
-            self.fc3 = nn.Linear(256, 16)
-            self.fc4 = nn.Linear(256, 1)
+        if game == 'tic-tac-toe-3':
+            fc_values = (2304, 576, 144, 9)
+        elif game == 'tic-tac-toe-4':
+            fc_values = (4096, 1024, 256, 16)
         else:
-            self.fc1 = nn.Linear(10752, 2688)
-            self.fc2 = nn.Linear(2688, 672)
-            self.fc3 = nn.Linear(672, 7)
-            self.fc4 = nn.Linear(672, 1)
+            fc_values = (10752, 2688, 672, 7)
+
+        self.fc1 = nn.Linear(fc_values[0], fc_values[1])
+        self.fc2 = nn.Linear(fc_values[1], fc_values[2])
+        self.fc3 = nn.Linear(fc_values[2], fc_values[3])
+        self.fc4 = nn.Linear(fc_values[2], 1)
 
         self.drop = nn.Dropout()
         self.relu = nn.ReLU()
