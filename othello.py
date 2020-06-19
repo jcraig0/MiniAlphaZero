@@ -10,6 +10,7 @@ class OthelloBoard():
                            (1, 1), (1, 0), (1, -1), (0, -1))
         self.legal_moves = self.get_legal_moves(self.turn)
         self.num_total_moves = 65
+        self.size = 8
 
     def get_legal_moves(self, turn):
         moves = []

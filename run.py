@@ -66,12 +66,19 @@ def play(self_play, human_test):
             else:
                 print(board)
                 move = input()
-                if game_type[:3] == 'tic' or game_type == 'othello':
-                    move = move.split()
-                    move = int(move[0]) * board.size + int(move[1])
-                else:
-                    move = int(move)
-                board.push(move)
+                try:
+                    if game_type[:3] == 'tic' or game_type == 'othello':
+                        move = move.split()
+                        move = int(move[0]) * board.size + int(move[1])
+                    else:
+                        move = int(move)
+
+                    if move in board.legal_moves:
+                        board.push(move)
+                    else:
+                        print('ERROR: Illegal move.')
+                except (ValueError, IndexError):
+                    print('ERROR: Move cannot be parsed.')
 
         if human_test:
             print(board)
