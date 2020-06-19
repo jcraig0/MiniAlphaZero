@@ -4,6 +4,7 @@ import model
 import config
 import tic_tac_toe
 import connect_4
+import othello
 import mcts
 import random
 import copy
@@ -15,6 +16,15 @@ original = None
 backup = None
 game_type = ''
 positions = []
+
+
+def get_board():
+    if game_type[:3] == 'tic':
+        return tic_tac_toe.TicTacToeBoard(int(game_type[-1]))
+    elif game_type == 'connect-4':
+        return connect_4.Connect4Board()
+    else:
+        return othello.OthelloBoard()
 
 
 def play(self_play, human_test):
@@ -30,13 +40,12 @@ def play(self_play, human_test):
     for i in range(iters):
         if human_test:
             print('Enter a move ' + ('("0 0" is the top-left space).'
-                  if game_type.startswith('tic')
+                  if game_type[:3] == 'tic' or game_type == 'othello'
                   else '("0" is the leftmost column).'))
         else:
             print('Starting {} game #{}...'.format(
                 'self-play' if self_play else 'evaluation', i + 1))
-        board = tic_tac_toe.TicTacToeBoard(int(game_type[-1])) \
-            if game_type.startswith('tic') else connect_4.Connect4Board()
+        board = get_board()
         curr_positions = []
         player_1_first = random.random() > .5 or not human_test
 
@@ -57,7 +66,7 @@ def play(self_play, human_test):
             else:
                 print(board)
                 move = input()
-                if game_type.startswith('tic'):
+                if game_type[:3] == 'tic' or game_type == 'othello':
                     move = move.split()
                     move = int(move[0]) * board.size + int(move[1])
                 else:
@@ -81,13 +90,12 @@ def play(self_play, human_test):
 
 
 def solve():
-    board = tic_tac_toe.TicTacToeBoard(int(game_type[-1])) \
-        if game_type.startswith('tic') else connect_4.Connect4Board()
+    board = get_board()
     # May be modified to evaluate a different position
     sequence = ((0, 0), (1, 1), (0, 1))
     for move in sequence:
         move = move[0] * board.size + move[1] \
-            if game_type.startswith('tic') else move
+            if game_type[:3] == 'tic' or game_type == 'othello' else move
         board.push(move)
     print(board)
 
@@ -99,7 +107,8 @@ def solve():
         print('Predicted next move for {}: {}.'.format(
             'X' if board.turn else 'O',
             '({}, {})'.format(next_move // board.size, next_move % board.size)
-            if game_type.startswith('tic') else next_move))
+            if game_type[:3] == 'tic' or game_type == 'othello'
+            else next_move))
 
 
 def get_y_policies(batch):

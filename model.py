@@ -15,8 +15,10 @@ class CNN(nn.Module):
             fc_values = (2304, 576, 144, 9)
         elif game == 'tic-tac-toe-4':
             fc_values = (4096, 1024, 256, 16)
-        else:
+        elif game == 'connect-4':
             fc_values = (10752, 2688, 672, 7)
+        else:
+            fc_values = (16384, 4096, 1024, 65)
 
         self.fc1 = nn.Linear(fc_values[0], fc_values[1])
         self.fc2 = nn.Linear(fc_values[1], fc_values[2])

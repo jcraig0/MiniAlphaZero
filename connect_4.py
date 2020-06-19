@@ -26,7 +26,7 @@ class Connect4Board():
                     self.winner = '0-1' if self.turn else '1-0'
                     return True
         # Check if the board is full
-        if all([self.grid[i][j] != ' ' for i in range(6) for j in range(7)]):
+        if all([i != ' ' for row in self.grid for i in row]):
             self.winner = '1/2-1/2'
             return True
 
